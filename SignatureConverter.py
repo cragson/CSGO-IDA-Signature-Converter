@@ -1,101 +1,46 @@
 # CSGO IDA Signature Converter
 #
 # written by cragson
-#
+
+from time import sleep
 
 def convertSig( sig ):
-
-    SigArray = []
-    
-    for char in range( 0, len( sig ), 1 ):
-
-        if( sig[ char ] == ' ' ):
-            continue
-
-        SigArray.append( sig[ char ] )
-
-    return SigArray
+    return ''.join( sig.strip().replace( ' ', '' ) )
 
 def generateByteSignature( sig ):
-
     Signature = convertSig( sig )
-    
     ByteSignature = []
 
-    counter = 1
-
-    for element in range( 0, len( Signature ), 1 ):
-        
-        if( counter >= 2 ):
+    for element in range( 0, len( Signature ), 2 ):
+        if( str( Signature[ element ] + Signature[ element + 1 ] ) == "??" ):
+            ByteSignature.append( r'\xCC' ) # wildcard byte 
             
-            ByteSignature.append( r'\x' + str( Signature[ element - 1 ] ) + str( Signature[ element ] ) )
-            
-            counter = 1
-
             continue
         
-        if( Signature[ element ] != '?' ):
-             
-            counter += 1
-
-            continue
-
-        if( Signature[ element ] == '?'):
-            
-            ByteSignature.append( r'\x00' )
-
-            counter = 1
-
+        ByteSignature.append( r'\x' + str( Signature[ element ] ) + str( Signature[ element + 1 ] ) )
 
     return ''.join( ByteSignature )
     
-
 def generateMask( sig ):
+    Signature = convertSig( sig )
+    ByteSignature = []
 
-    SigArray = convertSig( sig )
-
-    MaskArray = []
-
-    counter = 1  
-
-    for element in range( 0, len( SigArray ), 1 ):
-        
-        if( counter >= 2 ):
+    for element in range( 0, len( Signature ), 2 ):
+        if( str( Signature[ element ] + Signature[ element + 1 ] ) == "??" ):
+            ByteSignature.append( '?' )
             
-            MaskArray.append( 'x' )
-            
-            counter = 1
-
             continue
+        else:
+            ByteSignature.append( 'x' )
         
-        if( SigArray[ element ] != '?' ):
-             
-            counter += 1
-
-            continue
-
-        if( SigArray[ element ] == '?'):
-            
-            MaskArray.append( '?' )
-
-            counter = 1
-
-    return ''.join( MaskArray )
+    return ''.join( ByteSignature )
 
 def main():
-
-    times = int( input( " How often should get a Mask generated ? >> " ) )
-    if( times <= 0 ):
-        exit()
-
-    for time in range( 0, times, 1 ):
-
+    while( True ):
         signature = input( " Please enter your signature. \n>> " )
-
-        print( " Mask : " + generateMask( signature ) )
-
-        print( " Byte Signature : " + generateByteSignature( signature ) )
+        print( "\n Byte Signature : " + generateByteSignature( signature ) )
+        print( " Mask : " + generateMask( signature ) + "\n")
+        sleep(0.1)
     
-
 if __name__ == '__main__':
     main()
